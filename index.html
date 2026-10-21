@@ -75,7 +75,7 @@ details{margin-top:4px}summary{cursor:pointer;font-weight:600;color:var(--oink);
 </head>
 <body>
 <header><div class="brand">THE CONCRETE <b>GUYS</b></div>
-<nav class="tabs"><button id="tCalc" aria-current="page">Price it</button><button id="tQuote">Quote</button><button id="tNums">Numbers</button></nav></header>
+<nav class="tabs"><button id="tCalc" aria-current="page">Price it</button><button id="tSmall">Small job</button><button id="tQuote">Quote</button><button id="tNums">Numbers</button></nav></header>
 <main>
 <section id="vCalc">
   <div class="panel">
@@ -133,6 +133,51 @@ details{margin-top:4px}summary{cursor:pointer;font-weight:600;color:var(--oink);
     </details>
   </div>
   <button class="btn primary" id="toQuote" style="width:100%">Make a quote from this</button>
+</section>
+
+
+<section id="vSmall" hidden>
+  <div class="panel">
+    <h2>Small job</h2>
+    <p class="muted" style="margin-top:0">Mailbox posts, post footings, small patches, bagged pours. Nothing is saved.</p>
+    <label class="f">What kind of job<select id="kType">
+      <option value="mailbox">Mailbox post: remove old, set new</option>
+      <option value="posts">Post footings (fence, sign, hoop)</option>
+      <option value="pad">Small bagged pour (pad, landing, fill)</option>
+      <option value="repair">Step or patch repair</option>
+      <option value="custom">Something else</option></select></label>
+    <div id="kHelper" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:10px">
+      <label class="f">People<input id="kPeople" inputmode="numeric" value="1"></label>
+      <label class="f">Hours on site (each)<input id="kHours" inputmode="decimal" value="2"></label>
+      <label class="f">Bags of concrete<input id="kBags" inputmode="numeric" value="0"></label>
+      <label class="f">Bag type<select id="kBag"><option value="80">80 lb, $6.50</option><option value="60">60 lb, $5.00</option><option value="fast">Fast-setting 50 lb, $8.50</option><option value="repair">Repair mix 50 lb, $20</option></select></label>
+      <label class="f">Other materials $<input id="kMat" inputmode="decimal" value="0" placeholder="Post, mailbox, gravel"></label>
+      <label class="f">Dump / disposal $<input id="kDump" inputmode="decimal" value="0"></label>
+      <label class="f">Trip charge $<input id="kTrip" inputmode="decimal" value="50"></label>
+      <label class="f">Miles away (one way)<input id="kMiles" inputmode="decimal" value="0"></label>
+    </div>
+    <label class="f" style="margin-top:10px">What we're doing (prints on the quote)<textarea id="kDesc" rows="4"></textarea></label>
+  </div>
+  <div class="panel">
+    <div class="prices">
+      <div class="pcard"><small>Bare bones, 0% profit</small><div class="big" id="kCost">$0</div></div>
+      <div class="pcard main"><small id="kMLabel">At 25% margin</small><div class="big" id="kPrice">$0</div></div>
+    </div>
+    <div class="lab" style="margin-top:14px">Margin: <span id="kMVal">25%</span> <span class="muted" id="kMarkup"></span></div>
+    <input type="range" id="kMargin" min="0" max="95" step="1" value="25" aria-label="Margin percent">
+    <div class="note" id="kWarn" hidden></div>
+    <details style="margin-top:8px"><summary>Cost breakdown</summary><div id="kLines"></div></details>
+  </div>
+  <div class="panel">
+    <h2>Quick quote</h2>
+    <div class="row">
+      <label class="f">Customer name<input id="kcName"></label>
+      <label class="f">Phone<input id="kcPhone" type="tel"></label>
+    </div>
+    <label class="f" style="margin-top:10px">Job address<input id="kcAddr"></label>
+    <button class="btn primary" id="kPrint" style="width:100%;margin-top:12px">Print or save quick quote</button>
+  </div>
 </section>
 
 <section id="vQuote" hidden>
@@ -408,7 +453,13 @@ function calc(){
   const w = [];
   if (m < 0.30) w.push(`Below your 30% margin floor.`);
   if (p < 2500) w.push(`Under $2,500. Small jobs usually need a minimum.`);
-  $("warn").hidden = !w.length; $("warn").textContent = w.join(" ");
+  if (r.cy <= 4) {
+    const mix = S.mix[inp.psi] ?? S.mix[3500];
+    const extra = (4.25 - r.cy) * mix;
+    w.push(`Short load: ${r.cy} cy is 4 cy or less, so IMI's $${S.shortLoadFee} short-load charge is included in the price.` +
+      (extra < S.shortLoadFee ? ` Ordering 4.25 cy instead would cost about ${money(extra)} more in concrete and skip the $${S.shortLoadFee}, saving about ${money(S.shortLoadFee - extra)}.` : ``));
+  }
+  $("warn").hidden = !w.length; $("warn").innerHTML = w.map(esc).join("<br>");
   $("lines").innerHTML = r.lines.map(l => `<div class="bl"><span>${esc(l.label)}<em>${esc(l.source==="IMI"||l.source==="IMI Supply"||l.source==="your price"||l.source==="your rate"||l.source==="TN/Clarksville"?"Yours":"Estimate")}: ${esc(l.source)}</em></span><span>${money2(l.amount)}</span></div>`).join("")
     + `<div class="bl"><b>Total cost</b><b>${money2(cost)}</b></div><p class="muted">${r.sf.toLocaleString()} sq ft at ${thickness} in.</p>`;
   last = { inp, r, m, cost, p };
@@ -416,8 +467,8 @@ function calc(){
 ["len","wid","sqft","base","demo","dowels","miles","crew","days","excavate","haul","pump","winter","accel","sat","taxfree","margin"].forEach(id => $(id).addEventListener("input", calc));
 
 // tabs
-function show(t){ ["Calc","Quote","Nums"].forEach(k=>{ $("v"+k).hidden = k!==t; $("t"+k).toggleAttribute("aria-current", k===t); if(k===t) $("t"+k).setAttribute("aria-current","page"); }); if(t==="Quote") quoteSummary(); window.scrollTo(0,0); }
-$("tCalc").onclick=()=>show("Calc"); $("tQuote").onclick=()=>show("Quote"); $("tNums").onclick=()=>show("Nums"); $("toQuote").onclick=()=>show("Quote");
+function show(t){ ["Calc","Small","Quote","Nums"].forEach(k=>{ $("v"+k).hidden = k!==t; $("t"+k).toggleAttribute("aria-current", k===t); if(k===t) $("t"+k).setAttribute("aria-current","page"); }); if(t==="Quote") quoteSummary(); window.scrollTo(0,0); }
+$("tCalc").onclick=()=>show("Calc"); $("tSmall").onclick=()=>show("Small"); $("tQuote").onclick=()=>show("Quote"); $("tNums").onclick=()=>show("Nums"); $("toQuote").onclick=()=>show("Quote");
 
 // numbers page
 const NUMS = [
@@ -433,6 +484,9 @@ const NUMS = [
  ["Forms, stakes, joints, cure", "$0.60 per sq ft + $50", "Estimate"], ["Chairs and tie wire", "$0.15 per sq ft", "Estimate"],
  ["Dowel epoxy", "$1.30 per dowel", "Estimate"], ["Mileage", "$0.70 per mile", "Estimate"],
  ["Crew suggestion", "about 70 sq ft per person-day, plus tear-out", "Estimate"],
+ ["Bagged concrete 80 lb / 60 lb / fast-set 50 lb / repair 50 lb", "$6.50 / $5.00 / $8.50 / $20 per bag", "Estimate"],
+ ["Small-job labor", "$43.75 per person-hour ($350/8), 2-hour minimum", "Yours + estimate"],
+ ["Small-job trip charge", "$50", "Estimate"],
 ];
 $("nums").innerHTML = NUMS.map(([a,b,c]) => `<div class="bl"><span>${a}<em>${c}</em></span><span>${b}</span></div>`).join("");
 
@@ -484,4 +538,129 @@ $("print").onclick = () => {
   setTimeout(() => window.print(), 50);
 };
 $("psi").value = 3500; calc();
+
+
+// ---------- small jobs ----------
+const BAG = { "80":{price:6.5, cuft:0.6, name:"80 lb concrete"}, "60":{price:5, cuft:0.45, name:"60 lb concrete"}, "fast":{price:8.5, cuft:0.375, name:"50 lb fast-setting concrete"}, "repair":{price:20, cuft:0.4, name:"50 lb repair mortar"} };
+const HR = S.laborPerPersonDay/8, MIN_HOURS = 2;
+const KDEF = {
+  mailbox:{people:1,hours:2.5,bag:"fast",trip:50,dump:0,mat:0,helper:"posts",count:1,dia:10,depth:24,old:true},
+  posts:{people:2,hours:1,bag:"fast",trip:50,dump:0,mat:0,helper:"posts",count:4,dia:10,depth:30,old:false},
+  pad:{people:2,hours:3,bag:"80",trip:50,dump:0,mat:0,helper:"pad",len:4,wid:4,th:4},
+  repair:{people:1,hours:3,bag:"repair",trip:50,dump:0,mat:0,helper:"none"},
+  custom:{people:1,hours:2,bag:"80",trip:50,dump:0,mat:0,helper:"none"},
+};
+let kh = {};
+function kHelperHTML(t){
+  const d=KDEF[t];
+  if(d.helper==="posts") return `<div class="row">
+    <label class="f">Posts / holes<input id="hCount" inputmode="numeric" value="${d.count}"></label>
+    <label class="f">Hole diameter (in.)<input id="hDia" inputmode="decimal" value="${d.dia}"></label>
+    <label class="f">Hole depth (in.)<input id="hDepth" inputmode="decimal" value="${d.depth}"></label>
+    <label class="f">Post size<select id="hPost"><option value="16">4x4 wood</option><option value="12.6">4 in. round</option><option value="5">2-3/8 in. steel</option><option value="0">Hole only</option></select></label></div>
+    <label class="tog" style="margin-top:8px"><input type="checkbox" id="hOld" ${d.old?"checked":""}>Remove old post and footing first</label>`;
+  if(d.helper==="pad") return `<div class="row">
+    <label class="f">Length (ft)<input id="hLen" inputmode="decimal" value="${d.len}"></label>
+    <label class="f">Width (ft)<input id="hWid" inputmode="decimal" value="${d.wid}"></label>
+    <label class="f">Thickness (in.)<input id="hTh" inputmode="decimal" value="${d.th}"></label></div>`;
+  return `<p class="muted">Enter hours, bags, and materials below.</p>`;
+}
+function kHelperBags(){
+  const t=$("kType").value, bag=BAG[$("kBag").value];
+  if(KDEF[t].helper==="posts"){
+    const n=+$("hCount").value||0, dia=+$("hDia").value||0, dep=+$("hDepth").value||0, post=+$("hPost").value||0;
+    const cuft = n * ((Math.PI*(dia/2)**2 - post) * dep) / 1728 * 1.1;
+    return Math.max(0, Math.ceil(cuft / bag.cuft));
+  }
+  if(KDEF[t].helper==="pad"){
+    const cuft=(+$("hLen").value||0)*(+$("hWid").value||0)*((+$("hTh").value||0)/12)*1.1;
+    return Math.ceil(cuft / bag.cuft);
+  }
+  return null;
+}
+function kDescribe(){
+  const t=$("kType").value, bag=BAG[$("kBag").value], bags=+$("kBags").value||0, L=[];
+  if(t==="mailbox"){
+    if($("hOld")?.checked) L.push("Remove the existing mailbox post and dig out the old concrete footing.");
+    L.push(`Dig a ${$("hDia").value} in. x ${$("hDepth").value} in. hole and set the new post plumb and at the correct height for mail delivery.`);
+    L.push(`Set the post in ${bags} bag${bags===1?"":"s"} of ${bag.name}; crown the top so water sheds away.`);
+    L.push("Mount the mailbox and clean up; haul off the old post and concrete.");
+  } else if(t==="posts"){
+    const n=$("hCount").value;
+    if($("hOld")?.checked) L.push(`Remove ${n} existing post${n==="1"?"":"s"} and footings.`);
+    L.push(`Dig ${n} hole${n==="1"?"":"s"}, ${$("hDia").value} in. diameter x ${$("hDepth").value} in. deep.`);
+    L.push(`Set posts plumb in ${bags} bags of ${bag.name}; crown the tops to shed water.`);
+    L.push("Clean up and haul off spoils.");
+  } else if(t==="pad"){
+    L.push(`Form and pour a ${$("hLen").value} ft x ${$("hWid").value} ft pad, ${$("hTh").value} in. thick, using ${bags} bags of ${bag.name}.`);
+    L.push("Prepare and compact the base; broom finish with tooled edges.");
+    L.push("Strip forms and clean up.");
+  } else if(t==="repair"){
+    L.push(`Clean out loose and damaged concrete; patch and reshape using ${bags} bag${bags===1?"":"s"} of ${bag.name}.`);
+    L.push("Finish to match the surrounding surface as closely as practical; clean up.");
+  } else L.push("[Describe the work]");
+  return L.join("\n");
+}
+let kDescTouched=false, kLast=null;
+function kLoad(){
+  const t=$("kType").value, d=KDEF[t];
+  $("kHelper").innerHTML=kHelperHTML(t);
+  $("kPeople").value=d.people; $("kHours").value=d.hours; $("kBag").value=d.bag; $("kTrip").value=d.trip; $("kDump").value=d.dump; $("kMat").value=d.mat;
+  kDescTouched=false;
+  $("kHelper").querySelectorAll("input,select").forEach(el=>el.addEventListener("input",()=>{ kSync(); }));
+  kSync();
+}
+function kSync(){ const b=kHelperBags(); if(b!==null) $("kBags").value=b; if(!kDescTouched) $("kDesc").value=kDescribe(); kCalc(); }
+function kCalc(){
+  const bag=BAG[$("kBag").value], bags=+$("kBags").value||0, people=+$("kPeople").value||0, hours=+$("kHours").value||0;
+  const billedHrs=Math.max(MIN_HOURS,hours), miles=+$("kMiles").value||0, m=+$("kMargin").value/100;
+  const lines=[]; const add=(l,a,src,tax)=>{ if(a>0) lines.push({l,a,src,tax}); };
+  add(`Labor: ${people} x ${billedHrs} hr${hours<MIN_HOURS?` (${MIN_HOURS} hr minimum)`:""}`, people*billedHrs*HR, "Yours ($350/day)");
+  add(`${bags} bags ${bag.name}`, bags*bag.price, "Estimate", true);
+  add("Other materials", +$("kMat").value||0, "Your entry", true);
+  add("Dump / disposal", +$("kDump").value||0, "Your entry");
+  add("Trip charge (truck, fuel, tools)", +$("kTrip").value||0, "Estimate");
+  if(miles>0){ add("Drive time", people*(miles/45*2)*HR, "Yours ($350/day)"); add("Mileage", miles*2*S.mileageRate, "Estimate"); }
+  const taxable=lines.filter(x=>x.tax).reduce((s,x)=>s+x.a,0); add("Sales tax on materials", taxable*S.taxRate, "Yours (9.5%)");
+  const cost=lines.reduce((s,x)=>s+x.a,0), price=cost/(1-m);
+  $("kCost").textContent=money(cost); $("kPrice").textContent=money(price);
+  $("kMVal").textContent=Math.round(m*100)+"%"; $("kMLabel").textContent=`At ${Math.round(m*100)}% margin`; $("kMarkup").textContent=m>0?`(markup ${Math.round(m/(1-m)*100)}% on cost)`:"";
+  $("kLines").innerHTML=lines.map(x=>`<div class="bl"><span>${esc(x.l)}<em>${esc(x.src)}</em></span><span>${money2(x.a)}</span></div>`).join("")+`<div class="bl"><b>Total cost</b><b>${money2(cost)}</b></div>`;
+  const w=[]; if(m<0.30) w.push("Below your 30% margin floor.");
+  const cy = bags*bag.cuft/27; if(cy>=1) w.push(`That's about ${cy.toFixed(1)} cy in bags. Ready-mix is likely cheaper; price it on the Price it tab.`);
+  if(hours<MIN_HOURS) w.push(`Billing the ${MIN_HOURS}-hour minimum per person.`);
+  $("kWarn").hidden=!w.length; $("kWarn").innerHTML=w.map(esc).join("<br>");
+  kLast={cost,price,bags,bag,people,hours:billedHrs};
+}
+$("kType").onchange=kLoad;
+["kPeople","kHours","kBags","kMat","kDump","kTrip","kMiles","kMargin"].forEach(id=>$(id).addEventListener("input",kCalc));
+$("kBag").addEventListener("input",kSync);
+$("kDesc").addEventListener("input",()=>{ kDescTouched=true; });
+$("kPrint").onclick=()=>{
+  if(!kLast) return; const c=S.company, d=new Date(), total=Math.round(kLast.price);
+  const no=`CG-${String(d.getFullYear()).slice(2)}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}`;
+  const ds=x=>x.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}); const valid=new Date(d); valid.setDate(valid.getDate()+30);
+  const title=$("kType").selectedOptions[0].textContent;
+  const steps=$("kDesc").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  const head=logoURL?`<img class="q-logo" src="${logoURL}" alt="${esc(c.name)}">`:`<div class="q-word">THE CONCRETE <b>GUYS</b></div>`;
+  const mats=[]; if(kLast.bags>0) mats.push(`${kLast.bags} bags ${kLast.bag.name}`); if(+$("kMat").value>0) mats.push("Other materials as described");
+  $("quoteDoc").innerHTML=`
+  <div class="q-head"><div>${head}<div class="q-co"><b>${esc(c.name)}</b><br>${esc(c.address)}<br>${esc(c.phone)} | ${esc(c.email)}<br>${esc(c.web)}</div></div>
+  <div><div class="q-title">QUOTE</div><table class="q-meta"><tr><td>Quote No.</td><td><b>${no}</b></td></tr><tr><td>Date</td><td>${ds(d)}</td></tr><tr><td>Valid Until</td><td>${ds(valid)}</td></tr></table></div></div>
+  <div class="q-boxes"><div class="q-box"><div class="k">PREPARED FOR</div><b>${esc($("kcName").value||"Customer")}</b><br>${esc($("kcPhone").value)}<br>${esc($("kcAddr").value)}</div>
+  <div class="q-box"><div class="k">PROJECT</div><b>${esc(title)}</b><br>${esc($("kcAddr").value)}<br>Prepared by: ${esc(c.preparedBy)}</div></div>
+  <div class="q-h">What we will do</div><ol class="q-list">${steps.map(t=>`<li>${esc(t)}</li>`).join("")}</ol>
+  ${mats.length?`<div class="q-h">Materials included</div><ul class="q-list">${mats.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`:""}
+  <div class="q-h">Price</div><table class="q-table"><tr class="q-total"><td>TOTAL PRICE (labor, materials, cleanup)</td><td style="text-align:right">${money2(total)}</td></tr></table>
+  <div class="q-h">Terms</div><ul class="q-list">
+  <li>We call 811 to locate public utilities before digging. Private lines (sprinklers, lighting, pet fencing) are not covered.</li>
+  <li>Rock, buried debris, or other hidden conditions found while digging will be discussed and priced before extra work is done.</li>
+  <li>Price valid for 30 days. Payment due on completion.</li>
+  <li>Concrete needs 24 to 48 hours before loading; please don't hang or bump the post until then.</li></ul>
+  <div class="q-h">Acceptance</div><p style="font-size:9.5pt">Signing below accepts this quote (${no}, ${money2(total)}).</p>
+  <div class="q-sign"><div>Customer signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date</div><div>${esc(c.name)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date</div></div>
+  <div class="q-foot">${esc(c.name)} | ${esc(c.address)} | ${esc(c.phone)} | ${esc(c.email)} | ${esc(c.web)}</div>`;
+  setTimeout(()=>window.print(),50);
+};
+kLoad();
 </script></body></html>
