@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1A1A1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CG Calc">
+<title>Concrete Guys Calculator</title>
+<style>
+:root{--bg:#E4E3DF;--panel:#FFFFFF;--field:#FBFBFA;--ink:#1A1A1A;--muted:#5F5E59;--line:#C9C7C1;--orange:#F26722;--oink:#B4440E;--soft:#FFF3EC;--softline:#F7C3A6;
+--font:"Barlow","Helvetica Neue",Arial,system-ui,sans-serif;--cond:"Barlow Semi Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#17181A;--panel:#222427;--field:#2A2C30;--ink:#ECEBE8;--muted:#A6A49E;--line:#3C3F44;--oink:#FF9A62;--soft:#3A2418;--softline:#7A3D1C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+header{background:#1A1A1A;color:#fff;padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 0;position:sticky;top:0;z-index:5}
+.brand{font-family:var(--cond);font-weight:700;font-size:22px}.brand b{color:var(--orange)}
+.tabs{display:flex;gap:4px;margin-top:6px}
+.tabs button{background:none;border:0;color:#CFCDC8;padding:10px 14px 12px;font-weight:600;border-bottom:3px solid transparent;cursor:pointer}
+.tabs button[aria-current="page"]{color:#fff;border-bottom-color:var(--orange)}
+main{max-width:680px;margin:0 auto;padding:14px 14px 40px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:12px}
+h2{font-family:var(--cond);font-size:20px;margin:0 0 12px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600;color:var(--muted)}
+label.f input,label.f select,label.f textarea{border:1px solid var(--line);border-radius:4px;padding:10px;background:var(--field);color:var(--ink);font-weight:500;font-size:17px;min-height:48px;width:100%}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px}
+.seg button{border:1px solid var(--line);background:var(--field);border-radius:6px;padding:12px 6px;font-weight:600;cursor:pointer;min-height:48px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.lab{font-size:14px;font-weight:600;color:var(--muted);margin:14px 0 6px}
+.prices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pcard{border:1px solid var(--line);border-radius:6px;padding:12px;background:var(--field)}
+.pcard.main{border:2px solid var(--orange);background:var(--soft)}
+.pcard small{display:block;color:var(--muted);font-weight:600;font-size:13px}
+.big{font-family:var(--cond);font-weight:700;font-size:38px;line-height:1.05;font-variant-numeric:tabular-nums}
+.pcard.main .big{color:var(--oink)}
+input[type=range]{width:100%;accent-color:var(--orange);height:32px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;font-size:14px;color:var(--muted)}
+.stats b{display:block;color:var(--ink);font-size:17px;font-variant-numeric:tabular-nums}
+details{margin-top:4px}summary{cursor:pointer;font-weight:600;color:var(--oink);padding:8px 0}
+.tog{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:4px;background:var(--field);font-weight:500;min-height:48px}
+.tog input{width:22px;height:22px;accent-color:var(--orange)}
+.togs{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:6px;margin-top:10px}
+.bl{display:grid;grid-template-columns:1fr auto;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.bl em{display:block;font-style:normal;color:var(--muted);font-size:12px}
+.note{background:var(--soft);border:1px solid var(--softline);border-radius:6px;padding:10px 12px;font-size:14px;margin-top:10px}
+.btn{border:1px solid var(--ink);background:var(--panel);border-radius:4px;padding:12px 16px;font-weight:600;cursor:pointer;min-height:48px}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#1A1A1A}
+.muted{color:var(--muted);font-size:14px}
+/* printable quote */
+#quoteDoc{display:none}
+@media print{
+  @page{size:letter;margin:0.6in}
+  body{background:#fff;color:#1A1A1A}
+  header,main{display:none!important}
+  #quoteDoc{display:block!important;font-family:"Helvetica Neue",Arial,sans-serif;font-size:10pt;color:#1A1A1A}
+}
+.q-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #F26722;padding-bottom:10px;margin-bottom:14px}
+.q-word{font-weight:800;font-size:22pt;letter-spacing:.01em}.q-word b{color:#F26722}
+.q-logo{max-height:60px;max-width:230px}
+.q-co{font-size:8.5pt;color:#555;margin-top:4px;line-height:1.35}
+.q-title{text-align:right;font-weight:800;font-size:22pt}
+.q-meta{font-size:9pt;margin-top:6px}.q-meta td{padding:1px 0 1px 14px}.q-meta td:first-child{color:#666}
+.q-boxes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.q-box{border:1px solid #bbb;padding:8px 10px;font-size:9.5pt;line-height:1.4}.q-box .k{font-size:7.5pt;font-weight:700;color:#666;margin-bottom:3px}
+.q-h{font-weight:700;font-size:10.5pt;border-bottom:1px solid #F26722;padding-bottom:2px;margin:14px 0 6px;text-transform:uppercase}
+.q-table{width:100%;border-collapse:collapse;font-size:9.5pt}.q-table th{background:#f3f3f3;text-align:left;padding:5px 8px;border-bottom:1px solid #1A1A1A}.q-table td{padding:6px 8px;border-bottom:1px solid #ccc}
+.q-total td{background:#FFF4EE;font-weight:800;font-size:12pt;border-top:2px solid #F26722}
+.q-list{margin:0;padding-left:18px;font-size:9.5pt;line-height:1.45}
+.q-sign{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:30px;font-size:8.5pt;color:#555}.q-sign div{border-top:1px solid #1A1A1A;padding-top:3px;margin-top:28px}
+.q-foot{margin-top:24px;border-top:1px solid #bbb;padding-top:5px;font-size:7.5pt;color:#666;text-align:center}
+</style>
+</head>
+<body>
+<header><div class="brand">THE CONCRETE <b>GUYS</b></div>
+<nav class="tabs"><button id="tCalc" aria-current="page">Price it</button><button id="tQuote">Quote</button><button id="tNums">Numbers</button></nav></header>
+<main>
+<section id="vCalc">
+  <div class="panel">
+    <h2>Measurements</h2>
+    <div class="row">
+      <label class="f">Length (ft)<input id="len" inputmode="decimal" placeholder="0"></label>
+      <label class="f">Width (ft)<input id="wid" inputmode="decimal" placeholder="0"></label>
+      <label class="f">Or total sq ft<input id="sqft" inputmode="decimal" placeholder="Odd shapes"></label>
+    </div>
+    <div class="lab">Thickness</div>
+    <div class="seg" id="thick"></div>
+    <div class="lab">Reinforcement</div>
+    <div class="seg" id="steel"></div>
+  </div>
+
+  <div class="panel" id="out">
+    <div class="prices">
+      <div class="pcard"><small>Bare bones, 0% profit</small><div class="big" id="pCost">$0</div></div>
+      <div class="pcard main"><small id="mLabel">At 25% margin</small><div class="big" id="pPrice">$0</div></div>
+    </div>
+    <div class="lab" style="margin-top:14px">Margin: <span id="mVal">25%</span> <span class="muted" id="mMarkup"></span></div>
+    <input type="range" id="margin" min="0" max="95" step="1" value="25" aria-label="Margin percent">
+    <div class="stats"><div>Profit<b id="sProfit">$0</b></div><div>Concrete<b id="sCy">0 cy</b></div><div>Crew<b id="sCrew">-</b></div></div>
+    <div class="note" id="warn" hidden></div>
+  </div>
+
+  <div class="panel">
+    <details>
+      <summary>More options (mix, base, dig-out, tear-out, pump, distance)</summary>
+      <div class="row" style="margin-top:8px">
+        <label class="f">Mix<select id="psi"></select></label>
+        <label class="f">57 stone base<select id="base"><option value="0">None</option><option value="4" selected>4 in.</option><option value="6">6 in.</option></select></label>
+        <label class="f">Tear-out (sq ft)<input id="demo" inputmode="decimal" placeholder="0"></label>
+        <label class="f">Dowels to existing<input id="dowels" inputmode="numeric" placeholder="0"></label>
+        <label class="f">Miles away (one way)<input id="miles" inputmode="decimal" placeholder="0"></label>
+        <label class="f">Crew size<input id="crew" inputmode="numeric"></label>
+        <label class="f">Days<input id="days" inputmode="numeric"></label>
+      </div>
+      <div class="togs">
+        <label class="tog"><input type="checkbox" id="excavate" checked>Dig out to subgrade</label>
+        <label class="tog"><input type="checkbox" id="haul" checked>Haul off dirt</label>
+        <label class="tog"><input type="checkbox" id="pump">Pump truck</label>
+        <label class="tog"><input type="checkbox" id="winter">Winter fee (Dec-Feb)</label>
+        <label class="tog"><input type="checkbox" id="accel">Accelerator</label>
+        <label class="tog"><input type="checkbox" id="sat">Saturday pour</label>
+        <label class="tog"><input type="checkbox" id="taxfree">Tax-exempt job</label>
+      </div>
+    </details>
+  </div>
+
+  <div class="panel">
+    <details>
+      <summary>Cost breakdown</summary>
+      <div id="lines" style="margin-top:6px"></div>
+    </details>
+  </div>
+  <button class="btn primary" id="toQuote" style="width:100%">Make a quote from this</button>
+</section>
+
+<section id="vQuote" hidden>
+  <div class="panel">
+    <h2>Quote details</h2>
+    <p class="muted" style="margin-top:0">Nothing here is saved. Fill it in, then print or save as PDF.</p>
+    <div class="row">
+      <label class="f">Customer name<input id="cName"></label>
+      <label class="f">Phone<input id="cPhone" type="tel"></label>
+      <label class="f">Email<input id="cEmail" type="email"></label>
+    </div>
+    <label class="f" style="margin-top:10px">Job address<input id="cAddr"></label>
+    <div class="row" style="margin-top:10px">
+      <label class="f">What is it<select id="jType"><option>Driveway</option><option>Patio</option><option>Sidewalk</option><option>Pad / slab</option><option>Garage pad</option><option>Concrete flatwork</option></select></label>
+      <label class="f">Finish<select id="jFinish"><option>Broom finish</option><option>Smooth trowel finish</option></select></label>
+      <label class="f">Deposit %<input id="dep" inputmode="numeric" value="30"></label>
+    </div>
+    <label class="f" style="margin-top:10px">Notes on the quote<textarea id="cNotes" rows="3"></textarea></label>
+    <label class="f" style="margin-top:10px">Logo (optional, used for this quote only)<input type="file" id="logo" accept="image/*"></label>
+    <div class="note" id="qSum"></div>
+    <button class="btn primary" id="print" style="width:100%;margin-top:12px">Print or save as PDF</button>
+  </div>
+</section>
+
+<section id="vNums" hidden>
+  <div class="panel">
+    <h2>Numbers this calculator uses</h2>
+    <p class="muted" style="margin-top:0">Your numbers are marked "yours". Everything else is my best estimate; change them in the file anytime.</p>
+    <div id="nums"></div>
+  </div>
+</section>
+</main>
+<div id="quoteDoc"></div>
+<script>
+// Pricing engine for The Concrete Guys TN LLC.
+// Every default below is editable in Settings. Items marked "estimate" are not from a supplier quote.
+const DEFAULT_SETTINGS = {
+  company: {
+    name: "The Concrete Guys TN LLC",
+    address: "30 Crossland Ave, Clarksville, TN 37040",
+    phone: "(931) 266-4189",
+    email: "chris@theconcreteguystn.com",
+    web: "theconcreteguystn.com",
+    preparedBy: "Chris Torres, Manager",
+  },
+  mix: { 3000: 156, 3500: 158.5, 4000: 161, 4500: 163.5, 5000: 166 }, // IMI 2026 gross $/cy
+  envFeePerLoad: 20,       // IMI
+  shortLoadFee: 200,       // IMI, deliveries of 4 cy or less
+  winterPerCy: 5,          // IMI, Dec 1 - Feb 28
+  saturdayPerLoad: 50,     // IMI
+  accelPerCy: 6.5,         // IMI non-chloride accelerator
+  fiberPerCy: 7.5,         // IMI secondary fiber
+  loadSizeCy: 10,
+  rebarStick: 11.86,       // IMI Supply #4 x 20'
+  meshPanel: 9.15,         // IMI Supply 5'x10' 6x6 10/10
+  meshPanelSf: 42.75,
+  stonePerTon: 22,         // your price
+  laborPerPersonDay: 350,
+  taxRate: 0.095,
+  waste: 0.10,
+  contingency: 0,
+  marginDefault: 0.30,
+  marginFloor: 0.30,
+  minJobPrice: 0,
+  miniExDay: 450,          // estimate: $300/day + $150 delivery
+  pumpDay: 1500,           // estimate
+  haulPerCy: 35,           // estimate, loose dirt
+  demoDisposalPerSf: 0.75, // estimate
+  formsMiscPerSf: 0.60,    // estimate
+  formsMiscFlat: 50,       // estimate
+  chairsTiesPerSf: 0.15,   // estimate
+  epoxyPerDowel: 1.30,     // estimate
+  mileageRate: 0.70,       // estimate
+  depositPct: 30,
+  validDays: 30,
+  warrantyText: "One (1) year on workmanship and materials from completion. Hairline shrinkage cracks, damage by others, de-icing chemicals, and settlement of soils outside our work area are not covered.",
+};
+
+const JOB_TYPES = {
+  driveway: { label: "Driveway", thickness: 6, psi: 4000, reinforcement: "rebar18", baseIn: 4 },
+  pad:      { label: "Pad / slab", thickness: 4, psi: 3500, reinforcement: "mesh", baseIn: 4 },
+  patio:    { label: "Patio", thickness: 4, psi: 3500, reinforcement: "mesh", baseIn: 4 },
+  sidewalk: { label: "Sidewalk", thickness: 4, psi: 3500, reinforcement: "mesh", baseIn: 4 },
+  garage:   { label: "Garage pad", thickness: 6, psi: 4000, reinforcement: "rebar18", baseIn: 4 },
+  custom:   { label: "Other flatwork", thickness: 4, psi: 3500, reinforcement: "mesh", baseIn: 4 },
+};
+
+const REINFORCEMENT = {
+  none: "None",
+  fiber: "Fiber only",
+  mesh: "Wire mesh on chairs",
+  rebar18: "#4 rebar, 18 in. grid",
+  rebar12: "#4 rebar, 12 in. grid",
+};
+
+function newJobInputs(type = "driveway") {
+  const t = JOB_TYPES[type];
+  return {
+    type, length: "", width: "", sfOverride: "",
+    thickness: t.thickness, psi: t.psi, reinforcement: t.reinforcement, baseIn: t.baseIn,
+    excavate: true, haulSpoils: true, demoSf: 0, dowels: 0,
+    pump: false, saturday: false, accelerator: false, winter: isWinter(new Date()),
+    taxExempt: false, milesOneWay: 0,
+    crew: "", days: "", margin: "", notes: "",
+  };
+}
+
+function isWinter(d) {
+  const m = d.getMonth() + 1;
+  return m === 12 || m === 1 || m === 2;
+}
+
+const n = (v, d = 0) => (v === "" || v === null || v === undefined || isNaN(+v) ? d : +v);
+const ceil = Math.ceil;
+
+function suggestCrew(sf, demoSf) {
+  const pd = Math.max(2, sf / 70) + demoSf / 150;
+  const days = sf <= 450 ? 1 : ceil(sf / 450);
+  const crew = Math.min(8, Math.max(2, Math.round(pd / days)));
+  return { crew, days, pd };
+}
+
+function price(inp, s = DEFAULT_SETTINGS) {
+  const L = n(inp.length), W = n(inp.width);
+  const sf = n(inp.sfOverride) || L * W;
+  const th = n(inp.thickness, 4);
+  const demoSf = n(inp.demoSf);
+  const lines = [];
+  const add = (group, label, amount, source, taxable = false) => {
+    if (amount > 0.004) lines.push({ group, label, amount: Math.round(amount * 100) / 100, source, taxable });
+  };
+  if (sf <= 0) return { sf: 0, lines: [], cost: 0, price: 0, ok: false };
+
+  // Concrete
+  const cyNeed = (sf * th) / 12 / 27 * (1 + s.waste);
+  const cy = ceil(cyNeed * 4) / 4;
+  const loads = ceil(cy / s.loadSizeCy);
+  const mix = s.mix[inp.psi] ?? s.mix[3500];
+  add("Concrete", `Ready-mix ${cy} cy, ${inp.psi} PSI`, cy * mix, "IMI", true);
+  add("Concrete", `Environmental fee, ${loads} load(s)`, loads * s.envFeePerLoad, "IMI", true);
+  if (cy <= 4) add("Concrete", "Short-load charge (4 cy or less)", s.shortLoadFee, "IMI", true);
+  if (inp.winter) add("Concrete", "Winter service", cy * s.winterPerCy, "IMI", true);
+  if (inp.saturday) add("Concrete", "Saturday delivery", loads * s.saturdayPerLoad, "IMI", true);
+  if (inp.accelerator) add("Concrete", "Non-chloride accelerator", cy * s.accelPerCy, "IMI", true);
+  if (inp.reinforcement === "fiber") add("Concrete", "Secondary fiber", cy * s.fiberPerCy, "IMI", true);
+  if (inp.pump) add("Equipment", "Concrete pump", s.pumpDay, "estimate");
+
+  // Reinforcement
+  if (inp.reinforcement === "mesh") {
+    const panels = ceil((sf / s.meshPanelSf) * 1.05);
+    add("Steel", `Wire mesh, ${panels} panels`, panels * s.meshPanel, "IMI Supply", true);
+  }
+  if (inp.reinforcement === "rebar18" || inp.reinforcement === "rebar12") {
+    const lfPerSf = inp.reinforcement === "rebar18" ? 1.33 : 2.0;
+    const sticks = ceil((sf * lfPerSf * 1.1) / 20);
+    add("Steel", `#4 rebar, ${sticks} sticks`, sticks * s.rebarStick, "IMI Supply", true);
+  }
+  if (["mesh", "rebar18", "rebar12"].includes(inp.reinforcement))
+    add("Steel", "Chairs and tie wire", sf * s.chairsTiesPerSf, "estimate", true);
+  const dowels = n(inp.dowels);
+  if (dowels > 0) {
+    add("Steel", `Dowels, ${dowels} (#4, epoxied)`, ceil(dowels / 13) * s.rebarStick + dowels * s.epoxyPerDowel, "IMI Supply + estimate", true);
+  }
+
+  // Base
+  const baseIn = n(inp.baseIn);
+  if (baseIn > 0) {
+    const tons = ceil((sf * baseIn) / 12 / 27 * 1.4 * 1.1);
+    add("Base", `57 stone, ${tons} tons (${baseIn} in.)`, tons * s.stonePerTon, "your price", true);
+  }
+  add("Materials", "Forms, stakes, joint material, cure and seal", sf * s.formsMiscPerSf + s.formsMiscFlat, "estimate", true);
+
+  // Site work
+  if (inp.excavate) {
+    const depthIn = th + baseIn;
+    const spoils = (sf * depthIn) / 12 / 27 * 1.25;
+    if (sf > 250) add("Equipment", "Mini-excavator with delivery", s.miniExDay, "estimate");
+    if (inp.haulSpoils) add("Site", `Haul off ~${Math.round(spoils)} cy dirt`, spoils * s.haulPerCy, "estimate");
+  }
+  if (demoSf > 0) add("Site", `Demo disposal, ${demoSf} sq ft`, demoSf * s.demoDisposalPerSf, "estimate");
+
+  // Labor
+  const sug = suggestCrew(sf, demoSf);
+  const crew = n(inp.crew) || sug.crew;
+  const days = n(inp.days) || sug.days;
+  add("Labor", `Crew of ${crew} x ${days} day(s)`, crew * days * s.laborPerPersonDay, "your rate");
+  add("Labor", "Return visit (saw joints / strip forms)", s.laborPerPersonDay * 0.25, "your rate");
+
+  // Travel
+  const miles = n(inp.milesOneWay);
+  if (miles > 0) {
+    const driveHrs = (miles / 45) * 2;
+    add("Travel", `Drive time, ${driveHrs.toFixed(1)} hr round trip x crew x days`, crew * days * driveHrs * (s.laborPerPersonDay / 8), "your rate");
+    add("Travel", "Mileage", (days + 1) * miles * 2 * s.mileageRate, "estimate");
+  }
+
+  const taxable = lines.filter((l) => l.taxable).reduce((a, l) => a + l.amount, 0);
+  if (!inp.taxExempt) add("Tax", `Sales tax ${(s.taxRate * 100).toFixed(2)}% on materials`, taxable * s.taxRate, "TN/Clarksville");
+  const sub = lines.reduce((a, l) => a + l.amount, 0);
+  add("Contingency", `Contingency ${(s.contingency * 100).toFixed(0)}%`, sub * s.contingency, "your rule");
+  const cost = lines.reduce((a, l) => a + l.amount, 0);
+
+  const margin = n(inp.margin) ? n(inp.margin) / 100 : s.marginDefault;
+  let p = cost / (1 - margin);
+  const minApplied = p < s.minJobPrice;
+  if (minApplied) p = s.minJobPrice;
+  p = ceil(p / 5) * 5;
+  const realMargin = (p - cost) / p;
+
+  return {
+    ok: true, sf, cy, loads, crew, days, suggested: sug, lines,
+    cost: Math.round(cost * 100) / 100, price: p, margin: realMargin, marginInput: margin,
+    minApplied, belowFloor: realMargin < s.marginFloor - 0.0005,
+    estimateShare: lines.filter((l) => l.source.includes("estimate")).reduce((a, l) => a + l.amount, 0) / cost,
+  };
+}
+
+function scopeText(inp, r) {
+  const t = JOB_TYPES[inp.type]?.label || "Concrete flatwork";
+  const dims = inp.length && inp.width ? `${inp.length} ft x ${inp.width} ft` : `${r.sf} sq ft`;
+  const lines = [];
+  if (n(inp.demoSf) > 0) lines.push(`Saw-cut, remove, and dispose of approximately ${inp.demoSf} sq ft of existing concrete.`);
+  if (inp.excavate) lines.push(`Excavate to subgrade${inp.haulSpoils ? " and haul off excess soil" : ""}; compact subgrade.`);
+  if (n(inp.baseIn) > 0) lines.push(`Place and compact ${inp.baseIn} in. of #57 stone base.`);
+  lines.push(`Form to line and grade.${["mesh","rebar18","rebar12"].includes(inp.reinforcement) ? ` Reinforcement: ${REINFORCEMENT[inp.reinforcement].toLowerCase()}, supported at mid-depth.` : inp.reinforcement === "fiber" ? " Fiber-reinforced concrete." : ""}`);
+  if (n(inp.dowels) > 0) lines.push(`Tie to existing concrete with ${inp.dowels} epoxied #4 dowels.`);
+  lines.push(`Pour ${inp.thickness} in. thick, ${inp.psi} PSI ready-mix concrete; broom finish with tooled edges.`);
+  lines.push("Control joints at proper spacing, cut to 1/4 of slab depth; isolation joints at fixed objects.");
+  lines.push("Apply cure and seal; clean up and remove all debris.");
+  return { title: `${t}, ${dims} (${r.sf.toLocaleString()} sq ft)`, lines };
+}
+
+const EXCLUSIONS = [
+  "Permits, engineering, or surveying unless listed.",
+  "Rock excavation, unsuitable soils, or buried debris below subgrade.",
+  "Repair of unmarked private utilities, irrigation, or invisible pet fencing.",
+  "Sod, seed, or landscaping beyond backfilling and raking edges.",
+  "Hairline shrinkage cracks (normal in concrete; joints are placed to control them).",
+];
+const $ = id => document.getElementById(id);
+const S = DEFAULT_SETTINGS;
+const money = v => "$" + Math.round(v).toLocaleString("en-US");
+const money2 = v => "$" + v.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let thickness = 4, steel = "mesh", psiTouched = false, logoURL = "";
+
+function seg(el, opts, cur, onPick){
+  el.innerHTML = opts.map(([v,l]) => `<button type="button" data-v="${v}" aria-pressed="${String(v)===String(cur)}">${l}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => { onPick(b.dataset.v); el.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x===b)); calc(); });
+}
+seg($("thick"), [[4,'4"'],[5,'5"'],[6,'6"'],[8,'8"']], thickness, v => { thickness=+v; if(!psiTouched){ $("psi").value = thickness>=5 ? 4000 : 3500; } });
+seg($("steel"), [["none","None"],["mesh","Wire mesh"],["rebar18",'Rebar 18"'],["rebar12",'Rebar 12"'],["fiber","Fiber"]], steel, v => steel=v);
+$("psi").innerHTML = Object.keys(S.mix).map(p => `<option value="${p}" ${p==="3500"?"selected":""}>${p} PSI</option>`).join("");
+$("psi").onchange = () => { psiTouched = true; calc(); };
+
+function inputs(){
+  return { ...newJobInputs("custom"), length:$("len").value, width:$("wid").value, sfOverride:$("sqft").value,
+    thickness, psi:+$("psi").value, reinforcement:steel, baseIn:+$("base").value,
+    excavate:$("excavate").checked, haulSpoils:$("haul").checked, demoSf:$("demo").value, dowels:$("dowels").value,
+    pump:$("pump").checked, winter:$("winter").checked, accelerator:$("accel").checked, saturday:$("sat").checked,
+    taxExempt:$("taxfree").checked, milesOneWay:$("miles").value, crew:$("crew").value, days:$("days").value };
+}
+let last = null;
+function calc(){
+  const inp = inputs(), r = price(inp, S), m = +$("margin").value/100;
+  $("mVal").textContent = Math.round(m*100) + "%"; $("mLabel").textContent = `At ${Math.round(m*100)}% margin`;
+  $("mMarkup").textContent = m>0 ? `(markup ${Math.round(m/(1-m)*100)}% on cost)` : "";
+  if (!r.ok){ ["pCost","pPrice","sProfit"].forEach(id=>$(id).textContent="$0"); $("sCy").textContent="0 cy"; $("sCrew").textContent="-"; $("lines").innerHTML='<p class="muted">Enter a size to see costs.</p>'; $("warn").hidden=true; last=null; return; }
+  const cost = r.cost, p = cost/(1-m);
+  $("pCost").textContent = money(cost); $("pPrice").textContent = money(p); $("sProfit").textContent = money(p-cost);
+  $("sCy").textContent = `${r.cy} cy`; $("sCrew").textContent = `${r.crew} x ${r.days} day`;
+  $("crew").placeholder = `Suggested ${r.suggested.crew}`; $("days").placeholder = `Suggested ${r.suggested.days}`;
+  const w = [];
+  if (m < 0.30) w.push(`Below your 30% margin floor.`);
+  if (p < 2500) w.push(`Under $2,500. Small jobs usually need a minimum.`);
+  $("warn").hidden = !w.length; $("warn").textContent = w.join(" ");
+  $("lines").innerHTML = r.lines.map(l => `<div class="bl"><span>${esc(l.label)}<em>${esc(l.source==="IMI"||l.source==="IMI Supply"||l.source==="your price"||l.source==="your rate"||l.source==="TN/Clarksville"?"Yours":"Estimate")}: ${esc(l.source)}</em></span><span>${money2(l.amount)}</span></div>`).join("")
+    + `<div class="bl"><b>Total cost</b><b>${money2(cost)}</b></div><p class="muted">${r.sf.toLocaleString()} sq ft at ${thickness} in.</p>`;
+  last = { inp, r, m, cost, p };
+}
+["len","wid","sqft","base","demo","dowels","miles","crew","days","excavate","haul","pump","winter","accel","sat","taxfree","margin"].forEach(id => $(id).addEventListener("input", calc));
+
+// tabs
+function show(t){ ["Calc","Quote","Nums"].forEach(k=>{ $("v"+k).hidden = k!==t; $("t"+k).toggleAttribute("aria-current", k===t); if(k===t) $("t"+k).setAttribute("aria-current","page"); }); if(t==="Quote") quoteSummary(); window.scrollTo(0,0); }
+$("tCalc").onclick=()=>show("Calc"); $("tQuote").onclick=()=>show("Quote"); $("tNums").onclick=()=>show("Nums"); $("toQuote").onclick=()=>show("Quote");
+
+// numbers page
+const NUMS = [
+ ["Ready-mix 3000 / 3500 / 4000 / 4500 / 5000 PSI", "$156 / $158.50 / $161 / $163.50 / $166 per cy", "Yours (IMI)"],
+ ["Environmental fee", "$20 per load", "Yours (IMI)"], ["Short load, 4 cy or less", "$200", "Yours (IMI)"],
+ ["Winter Dec 1 - Feb 28", "$5 per cy", "Yours (IMI)"], ["Saturday", "$50 per load", "Yours (IMI)"],
+ ["Non-chloride accelerator / fiber", "$6.50 / $7.50 per cy", "Yours (IMI)"],
+ ["#4 rebar, 20 ft stick", "$11.86", "Yours (IMI Supply)"], ["Wire mesh 5x10 panel", "$9.15", "Yours (IMI Supply)"],
+ ["57 stone", "$22 per ton", "Yours"], ["Labor", "$350 per person per day", "Yours"],
+ ["Sales tax on materials", "9.5%", "Yours"], ["Concrete waste", "10%", "Yours"],
+ ["Mini-excavator (jobs over 250 sq ft)", "$450 incl. delivery", "Estimate"], ["Pump truck", "$1,500 per day", "Estimate"],
+ ["Dirt haul-off", "$35 per loose cy", "Estimate"], ["Tear-out disposal", "$0.75 per sq ft", "Estimate"],
+ ["Forms, stakes, joints, cure", "$0.60 per sq ft + $50", "Estimate"], ["Chairs and tie wire", "$0.15 per sq ft", "Estimate"],
+ ["Dowel epoxy", "$1.30 per dowel", "Estimate"], ["Mileage", "$0.70 per mile", "Estimate"],
+ ["Crew suggestion", "about 70 sq ft per person-day, plus tear-out", "Estimate"],
+];
+$("nums").innerHTML = NUMS.map(([a,b,c]) => `<div class="bl"><span>${a}<em>${c}</em></span><span>${b}</span></div>`).join("");
+
+// quote
+$("logo").onchange = () => { const f=$("logo").files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>logoURL=r.result; r.readAsDataURL(f); };
+function quoteSummary(){
+  $("qSum").textContent = last ? `Quote total ${money2(Math.round(last.p))} at ${Math.round(last.m*100)}% margin for ${last.r.sf.toLocaleString()} sq ft. Change the margin on the Price it tab.` : "Enter measurements on the Price it tab first.";
+}
+const REIN = { none:"No reinforcement", mesh:"Welded wire mesh supported at mid-depth", rebar18:"#4 rebar on an 18 in. grid, supported at mid-depth", rebar12:"#4 rebar on a 12 in. grid, supported at mid-depth", fiber:"Fiber-reinforced concrete" };
+$("print").onclick = () => {
+  if (!last) { show("Calc"); return; }
+  const { inp, r } = last, total = Math.round(last.p), c = S.company, d = new Date();
+  const no = `CG-${String(d.getFullYear()).slice(2)}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}`;
+  const ds = x => x.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  const valid = new Date(d); valid.setDate(valid.getDate()+30);
+  const dims = inp.length && inp.width && !inp.sfOverride ? `${inp.length} ft x ${inp.width} ft` : `${r.sf.toLocaleString()} sq ft`;
+  const title = `${$("jType").value}, ${dims} (${r.sf.toLocaleString()} sq ft)`;
+  const work = [];
+  if (+inp.demoSf>0) work.push(`Saw-cut, remove, and dispose of about ${inp.demoSf} sq ft of existing concrete.`);
+  if (inp.excavate) work.push(`Excavate to subgrade${inp.haulSpoils?" and haul off excess soil":""}; compact subgrade.`);
+  if (+inp.baseIn>0) work.push(`Place and compact ${inp.baseIn} in. of #57 stone base.`);
+  work.push(`Form to line and grade. ${REIN[inp.reinforcement]}.`);
+  if (+inp.dowels>0) work.push(`Tie into existing concrete with ${inp.dowels} epoxied #4 dowels.`);
+  work.push(`Pour ${inp.thickness} in. thick, ${inp.psi} PSI ready-mix concrete; ${$("jFinish").value.toLowerCase()} with tooled edges.`);
+  if (inp.pump) work.push("Concrete placed by pump truck.");
+  work.push("Control joints at proper spacing, cut to 1/4 of slab depth; isolation joints at fixed objects.");
+  work.push("Apply cure and seal; clean up and remove all debris.");
+  const head = logoURL ? `<img class="q-logo" src="${logoURL}" alt="${esc(c.name)}">` : `<div class="q-word">THE CONCRETE <b>GUYS</b></div>`;
+  $("quoteDoc").innerHTML = `
+  <div class="q-head"><div>${head}<div class="q-co"><b>${esc(c.name)}</b><br>${esc(c.address)}<br>${esc(c.phone)} | ${esc(c.email)}<br>${esc(c.web)}</div></div>
+  <div><div class="q-title">QUOTE</div><table class="q-meta"><tr><td>Quote No.</td><td><b>${no}</b></td></tr><tr><td>Date</td><td>${ds(d)}</td></tr><tr><td>Valid Until</td><td>${ds(valid)}</td></tr></table></div></div>
+  <div class="q-boxes"><div class="q-box"><div class="k">PREPARED FOR</div><b>${esc($("cName").value||"Customer")}</b><br>${esc($("cPhone").value)}${$("cEmail").value?"<br>"+esc($("cEmail").value):""}<br>${esc($("cAddr").value)}</div>
+  <div class="q-box"><div class="k">PROJECT</div><b>${esc(title)}</b><br>${esc($("cAddr").value)}<br>Prepared by: ${esc(c.preparedBy)}</div></div>
+  <div class="q-h">Scope summary &amp; price</div>
+  <table class="q-table"><tr><th>Description</th><th style="text-align:right">Quantity</th></tr><tr><td>${esc(title)}</td><td style="text-align:right">${r.sf.toLocaleString()} sq ft</td></tr>
+  <tr class="q-total"><td>TOTAL PRICE</td><td style="text-align:right">${money2(total)}</td></tr></table>
+  <div class="q-h">Work included</div><ol class="q-list">${work.map(t=>`<li>${esc(t)}</li>`).join("")}</ol>
+  ${$("cNotes").value?`<p style="font-size:9.5pt"><b>Notes:</b> ${esc($("cNotes").value)}</p>`:""}
+  <div class="q-h">Exclusions</div><ul class="q-list">${EXCLUSIONS.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>
+  <div class="q-h">Terms</div><ul class="q-list">
+  <li>Changes in scope, size, or site conditions found during work (rock, soft soil, buried debris, hidden utilities) will be priced and approved in writing before the work is done.</li>
+  <li>Price valid for 30 days. Pours are scheduled by weather; concrete is not placed below 40&deg;F without protection.</li>
+  <li>Payment: ${esc($("dep").value||"30")}% deposit at signing to schedule the work; balance due on completion.</li>
+  <li>Warranty: ${esc(S.warrantyText)}</li>
+  <li>Care: stay off for 24 to 48 hours; no vehicles for 7 days. Full strength at 28 days.</li></ul>
+  <div class="q-h">Acceptance</div><p style="font-size:9.5pt">Signing below accepts this quote (${no}, ${money2(total)}) and the scope, exclusions, and terms above.</p>
+  <div class="q-sign"><div>Customer signature &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date</div><div>${esc(c.name)} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Date</div></div>
+  <div class="q-foot">${esc(c.name)} | ${esc(c.address)} | ${esc(c.phone)} | ${esc(c.email)} | ${esc(c.web)}</div>`;
+  setTimeout(() => window.print(), 50);
+};
+$("psi").value = 3500; calc();
+</script></body></html>
